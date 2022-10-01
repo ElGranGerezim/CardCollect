@@ -6,7 +6,7 @@ add/update functions reflect this, asking for data about the deck to add.
 
 Created to allow me to learn about interfacing with cloud databases, as well as to give me a way to keep track of my collection.
 
-[Demo Video](http://youtube.link.goes.here)
+[Demo Video](https://youtu.be/XLtt7H8rarY)
 
 # Cloud Database
 
