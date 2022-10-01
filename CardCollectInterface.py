@@ -1,9 +1,10 @@
-from getpass import getuser
 import datetime
 import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import firestore
 
+# All of the shared i/o lists for input validation
+#region answers
 
 # Answer group constants for input validation.
 # Made global because several functions need to know this. 
@@ -14,6 +15,11 @@ YES_ANSWERS = ["y", "yes", "t", "true", "correct"]
 SIMPLE_ANSWERS = ["s", "simple", "small", "short"]
 DETAILED_ANSWERS = ["d", "detailed", "descriptive"]
 
+#endregion answers
+
+# Utility functions for connecting/displaying
+#region utility
+
 # Connect to the database using Application credentials
 def connect():
     # Get credential from json
@@ -22,8 +28,8 @@ def connect():
     # Initialize app connection
     app = firebase_admin.initialize_app(cred)
     
-    print("Connect")
-    db = firestore.client()
+    print("Connecting")
+    db = firestore.client(app)
     print("Connected to Firestore Database")
     return db
 
@@ -35,70 +41,18 @@ def isYes(input):
     else:
         return input in YES_ANSWERS
 
-# For testing, adds a default deck.
-def addDefault(db):
-    doc_ref = db.collection(u'decks').document(u'default')
-    doc_ref.set({
-        u'Name': u'default',
-    })
+# Displays a dictionary in a more readable way
+def displayDeck(dic):
+    print(f"Deck: {dic['Name']}")
+    for key in dic:
+        if key != "Name":
+            print(f"    {key}: {dic[key]}")
 
-# Adds a simple deck to the collection. Just a name and date.
-def addSimpleDeck(db):
-    # Get a name for it
-    name = input("What is the name of this deck >: ")
 
-    # Create a new doc by attempting to access it by name
-    doc_ref = db.collection(u'decks').document(name)
+#endregion utility
 
-    # Set the data
-    doc_ref.set({
-        u'Name':name,
-        u'Created':datetime.datetime.now(),
-        u'Updated':datetime.datetime.now(),
-        u'Type':u'Simple'
-    })
-    print("Deck Added successfully.")
-
-# Adds a detailed deck to the collection, includes name, purchase date, if the deck is gilded, and if it has custom pips
-def addDetailedDeck(db):
-    # Get all the required data
-    name = input("What is the name of this deck >: ")
-    dateInput = input("When was it purchased (mm/dd/yy) >: ")
-    # Try to cast to datetime
-    try:
-        date = datetime.datetime.strptime(dateInput, f'%m/%d/%y')
-    except:
-        # Bad date string, replacing with current datetime
-        date = datetime.datetime.now()
-    gilded = isYes(input("Is it gilded?: "))
-    customPips = isYes(input("Does it have custom pip icons >: "))
-
-    # Create the new document by attempting to access it.
-    doc_ref = db.collection(u'decks').document(name)
-
-    # Set all the data
-    doc_ref.set({
-        u'Name':name,
-        u'Created':datetime.datetime.now(),
-        u'Purchased': date,
-        u'Gilded': gilded,
-        u'Custom Pips': customPips,
-        u'Type':u'Detailed',
-        u'Updated':datetime.datetime.now()
-    })
-    print("Deck added successfully.")
-
-# Menu for chosing which type of deck to add.
-def addMenu(db):
-    choice = input("Would you like to add a simple or detailed entry? >:")
-
-    while choice.lower() not in SIMPLE_ANSWERS and choice not in DETAILED_ANSWERS:
-        # Bad choice
-        choice = input("unknown answer, please choose s or d")
-    if choice in SIMPLE_ANSWERS:
-        addSimpleDeck(db)
-    elif choice in DETAILED_ANSWERS:
-        addDetailedDeck(db)
+# All functions for the "Get" main menu option
+#region get
 
 # Displays all decks in the collection
 def getDecks(db):
@@ -171,6 +125,81 @@ def getMenu(db):
         # Display all decks
         getDecks(db)
 
+#endregion get
+
+# All functions for the "Add" main menu option
+#region add
+
+# For testing, adds a default deck.
+def addDefault(db):
+    doc_ref = db.collection(u'decks').document(u'default')
+    doc_ref.set({
+        u'Name': u'default',
+    })
+
+# Adds a simple deck to the collection. Just a name and date.
+def addSimpleDeck(db):
+    # Get a name for it
+    name = input("What is the name of this deck >: ")
+
+    # Create a new doc by attempting to access it by name
+    doc_ref = db.collection(u'decks').document(name)
+
+    # Set the data
+    doc_ref.set({
+        u'Name':name,
+        u'Created':datetime.datetime.now(),
+        u'Updated':datetime.datetime.now(),
+        u'Type':u'Simple'
+    })
+    print("Deck Added successfully.")
+
+# Adds a detailed deck to the collection, includes name, purchase date, if the deck is gilded, and if it has custom pips
+def addDetailedDeck(db):
+    # Get all the required data
+    name = input("What is the name of this deck >: ")
+    dateInput = input("When was it purchased (mm/dd/yy) >: ")
+    # Try to cast to datetime
+    try:
+        date = datetime.datetime.strptime(dateInput, f'%m/%d/%y')
+    except:
+        # Bad date string, replacing with current datetime
+        date = datetime.datetime.now()
+    gilded = isYes(input("Is it gilded?: "))
+    customPips = isYes(input("Does it have custom pip icons >: "))
+
+    # Create the new document by attempting to access it.
+    doc_ref = db.collection(u'decks').document(name)
+
+    # Set all the data
+    doc_ref.set({
+        u'Name':name,
+        u'Created':datetime.datetime.now(),
+        u'Purchased': date,
+        u'Gilded': gilded,
+        u'Custom Pips': customPips,
+        u'Type':u'Detailed',
+        u'Updated':datetime.datetime.now()
+    })
+    print("Deck added successfully.")
+
+# Menu for chosing which type of deck to add.
+def addMenu(db):
+    choice = input("Would you like to add a simple or detailed entry? >:")
+
+    while choice.lower() not in SIMPLE_ANSWERS and choice not in DETAILED_ANSWERS:
+        # Bad choice
+        choice = input("unknown answer, please choose s or d")
+    if choice in SIMPLE_ANSWERS:
+        addSimpleDeck(db)
+    elif choice in DETAILED_ANSWERS:
+        addDetailedDeck(db)
+
+#endregion add
+
+# All functions for the "delete" main menu option
+#region delete
+
 # Asks for a deck, if it exists asks for confirmation, then deletes deck
 def delete(db):
     name = input("What is the name of the deck to delete? >:")
@@ -192,6 +221,11 @@ def delete(db):
             print("Deck Deleted Successfully.")
     else:
         print(u'No such deck exists.')
+
+#endregion delete
+
+# All functions for the "update" main menu option
+#region update
 
 # Menu for selecting which deck and fields to update
 def updateMenu(db):
@@ -259,12 +293,7 @@ def update(doc_ref, field):
         # Firebase couldn't cast the datetime or bools and threw an error.
         print("There was an error updating the document. Please double check your data to ensure it is valid.")
 
-# Displays a dictionary in a more readable way
-def displayDeck(dic):
-    print(f"Deck: {dic['Name']}")
-    for key in dic:
-        if key != "Name":
-            print(f"    {key}: {dic[key]}")
+#endregion update
 
 # Main menu
 def main():
@@ -276,7 +305,7 @@ def main():
             getMenu(db)
         if answer == "add":
             addMenu(db)
-        if answer == "remove":
+        if answer == "delete":
             delete(db)
         if answer == "update":
             updateMenu(db)
