@@ -54,6 +54,54 @@ def displayDeck(dic):
 # All functions for the "Get" main menu option
 #region get
 
+# Menu for selecting which decks to get from database
+def getMenu(db):
+
+    # Unique, search only answers are kept here instead of global.
+    all = ["a", "all", "every", ""]
+    search = ["s", "query", "specific", "search", " "]
+    choice = input("Would you like to get all decks, or search for specific ones? >:")
+
+    if choice not in all and choice not in search:
+        # Bad choice
+        print("Choice not recognized, returning to start")
+    elif choice in search:
+        # Search for specific decks
+        queryMenu(db)
+    elif choice in all:
+        # Display all decks
+        getDecks(db)
+
+# Menu for selecting search options.
+def queryMenu(db):
+
+    # Unique, query only answers are kept here instead of global
+    keyword = ["n", "k", "keyword", "name"]
+    choice = input("Would you like all simple, all detailed, or to search by name? >:").lower()
+
+    if choice in SIMPLE_ANSWERS:
+        # Display all simple decks
+        getSimpleDecks(db)
+    elif choice in DETAILED_ANSWERS:
+        # Display all detailed decks
+        getDetailedDecks(db)
+    elif choice in keyword:
+        # Start a search
+        search(db)
+    else:
+        print("Choice not recognized, returning to start.")
+
+# Searches for a specific deck by name and displays it
+def search(db):
+    name = input("What do you want to search for? >:")
+
+    # Attempt to get the deck
+    doc = db.collection(u'decks').document(name).get()
+    if doc.exists:
+        displayDeck(doc.to_dict())
+    else:
+        print("No results found. Remember name must be exact")
+
 # Displays all decks in the collection
 def getDecks(db):
     # Get the deccks
@@ -77,65 +125,29 @@ def getDetailedDecks(db):
     for doc in docs:
         displayDeck(doc.to_dict())
 
-# Searches for a specific deck by name and displays it
-def search(db):
-    name = input("What do you want to search for? >:")
-
-    # Attempt to get the deck
-    doc = db.collection(u'decks').document(name).get()
-    if doc.exists:
-        displayDeck(doc.to_dict())
-    else:
-        print("No results found. Remember name must be exact")
-
-# Menu for selecting search options.
-def queryMenu(db):
-
-    # Unique, query only answers are kept here instead of global
-    keyword = ["n", "k", "keyword", "name"]
-    choice = input("Would you like all simple, all detailed, or to search by name? >:").lower()
-
-    if choice in SIMPLE_ANSWERS:
-        # Display all simple decks
-        getSimpleDecks(db)
-    elif choice in DETAILED_ANSWERS:
-        # Display all detailed decks
-        getDetailedDecks(db)
-    elif choice in keyword:
-        # Start a search
-        search(db)
-    else:
-        print("Choice not recognized, returning to start.")
-
-# Menu for selecting which decks to get from database
-def getMenu(db):
-
-    # Unique, search only answers are kept here instead of global.
-    all = ["a", "all", "every", ""]
-    search = ["s", "query", "specific", "search", " "]
-    choice = input("Would you like to get all decks, or search for specific ones? >:")
-
-    if choice not in all and choice not in search:
-        # Bad choice
-        print("Choice not recognized, returning to start")
-    elif choice in search:
-        # Search for specific decks
-        queryMenu(db)
-    elif choice in all:
-        # Display all decks
-        getDecks(db)
-
 #endregion get
 
 # All functions for the "Add" main menu option
 #region add
 
-# For testing, adds a default deck.
-def addDefault(db):
-    doc_ref = db.collection(u'decks').document(u'default')
-    doc_ref.set({
-        u'Name': u'default',
-    })
+# Menu for chosing which type of deck to add.
+def addMenu(db):
+    choice = input("Would you like to add a simple or detailed entry? >:")
+
+    while choice.lower() not in SIMPLE_ANSWERS and choice not in DETAILED_ANSWERS:
+        # Bad choice
+        choice = input("unknown answer, please choose s or d")
+    if choice in SIMPLE_ANSWERS:
+        addSimpleDeck(db)
+    elif choice in DETAILED_ANSWERS:
+        addDetailedDeck(db)
+
+# # For testing, adds a default deck.
+# def addDefault(db):
+#     doc_ref = db.collection(u'decks').document(u'default')
+#     doc_ref.set({
+#         u'Name': u'default',
+#     })
 
 # Adds a simple deck to the collection. Just a name and date.
 def addSimpleDeck(db):
@@ -182,18 +194,6 @@ def addDetailedDeck(db):
         u'Updated':datetime.datetime.now()
     })
     print("Deck added successfully.")
-
-# Menu for chosing which type of deck to add.
-def addMenu(db):
-    choice = input("Would you like to add a simple or detailed entry? >:")
-
-    while choice.lower() not in SIMPLE_ANSWERS and choice not in DETAILED_ANSWERS:
-        # Bad choice
-        choice = input("unknown answer, please choose s or d")
-    if choice in SIMPLE_ANSWERS:
-        addSimpleDeck(db)
-    elif choice in DETAILED_ANSWERS:
-        addDetailedDeck(db)
 
 #endregion add
 
